@@ -1,6 +1,8 @@
 package uz.azamat.service;
 
+import org.telegram.telegrambots.meta.api.methods.send.SendDocument;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
+import org.telegram.telegrambots.meta.api.objects.InputFile;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.ReplyKeyboardMarkup;
 import org.telegram.telegrambots.meta.api.objects.replykeyboard.buttons.KeyboardRow;
 import uz.azamat.util.ButtonNamesForAdmin;
@@ -29,5 +31,40 @@ public class ButtonService {
         sendMessage.setReplyMarkup(replyKeyboardMarkup);
 
         return sendMessage;
+    }
+
+    public static SendDocument getReplyKeyboardButtonsOnSetMark() {
+        SendDocument sendDocument = new SendDocument();
+        sendDocument.setChatId(LocalStorage.getAdminChatId());
+        String zipFileId = LocalStorage.getHandlingHomeworkForChecking().getZipFileId();
+        sendDocument.setDocument(new InputFile(zipFileId));
+        sendDocument.setCaption(LocalStorage.getHomeworkCaptionOnChecking(LocalStorage.getHandlingHomeworkForChecking()));
+
+        ReplyKeyboardMarkup replyKeyboardMarkup = getReplyKeyboardForSetMarkForHomework();
+
+        sendDocument.setReplyMarkup(replyKeyboardMarkup);
+
+        return sendDocument;
+    }
+
+    private static ReplyKeyboardMarkup getReplyKeyboardForSetMarkForHomework() {
+        ReplyKeyboardMarkup replyKeyboardMarkup = new ReplyKeyboardMarkup();
+        List<KeyboardRow> rows = new ArrayList<>();
+
+        KeyboardRow firstRow = new KeyboardRow();
+        KeyboardRow secondRow = new KeyboardRow();
+
+        for (int i = 1; i <= 5; i++) {
+            firstRow.add(String.valueOf(i));
+        }
+        secondRow.add(ButtonNamesForAdmin.CANCEL.getString());
+
+        rows.add(firstRow);
+        rows.add(secondRow);
+
+        replyKeyboardMarkup.setKeyboard(rows);
+        replyKeyboardMarkup.setOneTimeKeyboard(true);
+        replyKeyboardMarkup.setResizeKeyboard(true);
+        return replyKeyboardMarkup;
     }
 }

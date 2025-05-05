@@ -5,7 +5,8 @@ import lombok.Getter;
 @Getter
 public enum ButtonNamesForAdmin {
     CHECK_HOMEWORK("Check homework"),
-    SHOW_OLD_HOMEWORKS("Show old homeworks");
+    SHOW_OLD_HOMEWORKS("Show old homeworks"),
+    CANCEL("Cancel");
 
     private final String string;
 

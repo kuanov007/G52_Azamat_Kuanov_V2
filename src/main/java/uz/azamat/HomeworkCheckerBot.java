@@ -1,17 +1,24 @@
 package uz.azamat;
 
+import org.telegram.telegrambots.bots.DefaultBotOptions;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.*;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.DeleteMessage;
 import org.telegram.telegrambots.meta.api.methods.updatingmessages.EditMessageText;
 import org.telegram.telegrambots.meta.api.objects.Update;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
+import org.telegram.telegrambots.meta.exceptions.TelegramApiRequestException;
 import uz.azamat.util.LocalStorage;
 
 import java.util.function.Function;
 
 public class HomeworkCheckerBot extends TelegramLongPollingBot {
     private final String username;
+
+    public HomeworkCheckerBot(DefaultBotOptions options, String botToken, String username) {
+        super(options, botToken);
+        this.username = username;
+    }
 
     public HomeworkCheckerBot(String botToken, String username) {
         super(botToken);

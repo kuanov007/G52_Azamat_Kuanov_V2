@@ -32,13 +32,15 @@ public class AdminUi implements UiService {
                         LocalStorage.setAdminState(AdminState.SHOW_HOMEWORK_LIST_IN_OLD);
                     }
                 }
-            } else {
-                SendMessage sendMessage = new SendMessage();
-                sendMessage.setChatId(LocalStorage.getAdminChatId());
-                sendMessage.setText("Iltimos pastdagi tugmalardan foydalaning!");
-                executeObject.apply(sendMessage);
-                return;
-            }
+            } /*else {
+                if (LocalStorage.getAdminState().equals(AdminState.MAIN)) {
+                    SendMessage sendMessage = new SendMessage();
+                    sendMessage.setChatId(LocalStorage.getAdminChatId());
+                    sendMessage.setText("Iltimos pastdagi tugmalardan foydalaning!");
+                    executeObject.apply(sendMessage);
+                    return;
+                }
+            }*/
             switch (LocalStorage.getAdminState()) {
                 case SHOW_HOMEWORK_LIST_IN_OLD, SHOW_HOMEWORK_LIST_IN_CHECKING -> {
                     SendMessage sendMessageWithHomeworkList = PaginationService.getHomeworksList(Long.parseLong(LocalStorage.getAdminChatId()), 1);
@@ -53,10 +55,27 @@ public class AdminUi implements UiService {
                     }
                 }
                 case SET_A_MARK -> {
-                    executeObject.apply(new SendMessage(LocalStorage.getAdminChatId(), "Baho qo'yish uchun pastdagi tugmalardan foydalanishingizni mumkin!"));
+                    executeObject.apply(ButtonService.getReplyKeyboardButtonsOnSetMark());
+                    executeObject.apply(new SendMessage(LocalStorage.getAdminChatId(), "Feedback yozib qoldiring!"));
+                    LocalStorage.setAdminState(AdminState.ENTER_FEEDBACK);
                 }
                 case ENTER_FEEDBACK -> {
-                    //TODO
+                    if (text.equals(ButtonNamesForAdmin.CANCEL.getString())) {
+                        LocalStorage.setHandlingHomeworkForChecking(null);
+                        LocalStorage.setAdminState(AdminState.MAIN);
+                    } else {
+                        try {
+                            byte mark = Byte.parseByte(text);
+                            LocalStorage.getHandlingHomeworkForChecking().setMark(mark);
+                            executeObject.apply(new SendMessage(LocalStorage.getAdminChatId(), "Uyga vazifa tekshirildi va feedback berildi!"));
+                            LocalStorage.setAdminState(AdminState.MAIN);
+                        } catch (NumberFormatException e) {
+                            SendMessage sendMessage = new SendMessage();
+                            sendMessage.setChatId(LocalStorage.getAdminChatId());
+                            sendMessage.setText("Iltimos pastdagi tugmalardan foydalaning!");
+                            executeObject.apply(sendMessage);
+                        }
+                    }
                 }
             }
         }
@@ -77,24 +96,22 @@ public class AdminUi implements UiService {
             StringBuilder stringBuilder = new StringBuilder();
             switch (LocalStorage.getAdminState()) {
                 case SHOW_HOMEWORK_LIST_IN_OLD -> {
+
                     stringBuilder.append("Homework: ").append(homework.getThemeOrDescription()).append("\n")
-                            .append("Student: ").append(GlobalStorage.getUserByChatId(homework.getUserChatId()).get().getUsername()).append("\n")
+                            .append("Student : ").append(GlobalStorage.getUserByChatId(homework.getUserChatId()).get().getFirstName()).append(" ").append(GlobalStorage.getUserByChatId(homework.getUserChatId())).append("\n")
+                            .append("Student username: ").append(GlobalStorage.getUserByChatId(homework.getUserChatId()).get().getUsername()).append("\n")
+                            .append("Ball: ").append(homework.getMark()).append("\n")
+                            .append("Teacher feedback: ").append(homework.getFeedbackByTeacher()).append("\n")
                             .append("Sent at: ").append(homework.getSendTimeByUser()).append("\n")
-                            .append("----------------------\n");
+                            .append("Check at: ").append(homework.getCheckTimeByTeacher());
+
                     sendDocument.setCaption(stringBuilder.toString());
                     executeObject.apply(sendDocument);
                     LocalStorage.setAdminState(AdminState.MAIN);
                 }
                 case SHOW_HOMEWORK_LIST_IN_CHECKING -> {
-                    stringBuilder.append("Homework: ").append(homework.getThemeOrDescription()).append("\n")
-                            .append("Student: ").append(GlobalStorage.getUserByChatId(homework.getUserChatId()).get().getUsername()).append("\n")
-                            .append("Sent at: ").append(homework.getSendTimeByUser()).append("\n")
-                            .append("----------------------\n")
-                            .append("Open .zip file to check homework")
-                            .append("Give ball(1,2,3,4,5)");
-                    sendDocument.setCaption(stringBuilder.toString());
-                    executeObject.apply(sendDocument);
                     LocalStorage.setAdminState(AdminState.ENTER_FEEDBACK);
+                    LocalStorage.setHandlingHomeworkForChecking(homework);
                 }
             }
         } else {
